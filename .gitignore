@@ -1,0 +1,16 @@
+*.db
+*.db-shm
+*.db-wal
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+frontend/.env.local
+backend/.env
+.DS_Store
+backend/data/external/
+.specstory/
+.vscode/
+backend/frontend/
+frontend/app.py
+frontend/package-lock.json

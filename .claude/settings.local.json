@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(git *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(ls *)",
+      "Bash(curl *)",
+      "Bash(grep *)",
+      "Bash(find *)",
+      "Bash(python3 *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(which *)",
+      "Bash(kill *)",
+      "Bash(lsof *)",
+      "Bash(ps *)",
+      "Bash(echo *)",
+      "Bash(mkdir *)",
+      "Bash(rm *)",
+      "Bash(mv *)",
+      "Bash(cp *)",
+      "Bash(touch *)",
+      "Bash(chmod *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(date *)",
+      "Bash(source *)",
+      "Bash(*)"
+    ]
+  }
+}
