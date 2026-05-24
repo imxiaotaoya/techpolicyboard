@@ -1,23 +1,23 @@
 # TechPolicyBoard — 科技政策综合看板
 
-面向政府科技部门（科委、发改委、工信部）和金融市场研究员的交互式综合看板。**5 分钟内理解一个前沿技术的全貌** —— 将"具身智能""脑机接口""量子计算"等政策热词与具体技术、产业实体和市场资本数据关联起来。
+面向政府科技部门（科委、发改委、工信部）和金融市场研究员的交互式综合看板。**5 分钟内理解一个前沿技术的全貌** —— 将"具身智能""脑机接口""量子计算""核聚变"等政策热词与具体技术、产业实体和市场资本数据关联起来。
 
 ## 四大模块
 
 | 模块 | 功能 |
 |---|---|
-| **技术探索器** | 交互式 SVG 技术图解，悬停展开子技术气泡，点击查看详情卡片 |
-| **政策追踪** | 政策时间轴 + 四阶段创新看板（基础研究 → 应用研发 → 试点 → 产业化）+ 同类政策推荐 |
+| **技术探索器** | 交互式技术图解，悬停展开子技术，点击查看能力边界和近期成果 |
+| **政策追踪** | 按技术领域过滤的政策看板 + 四阶段创新看板 + 同类政策推荐 |
 | **产业链** | 区域产业地图，点击城市节点查看产业禀赋、政策和应用场景 |
-| **市场趋势** | 资金流热力图，识别过热/低估赛道 + 政策干预目标标记 |
+| **市场趋势** | 一级市场动态滚动 Feed + 政策-市场反应延迟分析 + 产业链热力图 |
 
 ## 技术栈
 
-**前端**：React 19 + TypeScript + Vite + Tailwind CSS 4 + Motion (Framer Motion)
+**前端**：React 19 + TypeScript + Vite + Tailwind CSS 4 + Motion
 
 **后端**：Python FastAPI + SQLite + APScheduler + httpx
 
-**数据**：SQLite 数据库 + 多源政策抓取管道
+**数据**：SQLite 数据库 + 多源政策抓取管道 + 一级市场动态采集
 
 ## 快速开始
 
@@ -25,121 +25,142 @@
 
 ```bash
 # 前端
-cd frontend
-npm install
+cd frontend && npm install
 
 # 后端
-cd backend
-pip install -r requirements.txt
+cd backend && pip install -r requirements.txt
 ```
 
-### 2. 配置环境变量
+### 2. 配置
 
 ```bash
+# 后端环境变量（可选）
+cp backend/.env.example backend/.env
+
 # LLM Agent（可选）
 cp frontend/.env.example frontend/.env.local
-
-# 美国国会 API Key（可选，用于抓取 US Congress 数据）
-export CONGRESS_API_KEY="your_api_key"
 ```
 
 ### 3. 初始化数据库
 
 ```bash
 cd backend
-python3 seed_policies.py   # 将手工策展的 JSON 数据导入 SQLite
+python3 seed_policies.py     # 手工策展数据 → SQLite
+python3 seed_external.py     # 外部数据集导入（AI Legislation Tracker）
+python3 tag_policies.py      # 自动标注政策的关联技术和产业
 ```
 
 ### 4. 启动
 
 ```bash
-# 终端 1：启动后端（端口 8000）
+# 终端 1：后端（端口 8000）
 cd backend && uvicorn main:app --reload --port 8000
 
-# 终端 2：启动前端（端口 3000）
+# 终端 2：前端（端口 3000）
 cd frontend && npm run dev
 ```
 
 浏览器打开 `http://localhost:3000`
 
-## 政策数据管道
+## 数据管道
 
-项目内置多源政策抓取系统，自动采集并结构化国内外政策文本。
+### 政策采集
 
-### 数据源
-
-| 来源 | 覆盖 | 更新频率 |
+| 来源 | 覆盖 | 频率 |
 |---|---|---|
-| **US Federal Register** | 美国总统行政令、联邦机构法规 | 每 24h |
-| **US Congress (Congress.gov)** | 美国国会法案、修正案 | 每 24h |
-| **EU EUR-Lex** | 欧盟法规、指令、决定 | 每 48h |
-| **手工策展** | 中国科技政策（发改委/科技部/工信部） | 手动 |
+| US Federal Register | 总统行政令、联邦机构法规 | 每 24h |
+| US Congress (Congress.gov) | 国会法案、修正案 | 每 24h |
+| EU EUR-Lex | 欧盟法规、指令、决定 | 每 48h |
+| RSS 多源订阅 | Federal Register / EU Parliament / NIST / 科技部等 13 个源 | 每 12h |
+| 搜索引擎发现 | DuckDuckGo 搜索权威域名 | 每 24h |
+| 外部数据集 | AI Legislation Tracker（28 条全球 AI 法律） | 手动 |
 
-### 手动触发抓取
+### 一级市场动态
 
-```bash
-# 触发 Federal Register 抓取（无需 API Key）
-curl -X POST http://localhost:8000/api/scrape/us_federal_register/trigger
+| 来源 | 内容 |
+|---|---|
+| TechCrunch / VentureBeat / Sifted / 36Kr RSS | 科技融资新闻 |
+| SEC EDGAR Form D | 美国 VC 融资备案 |
+| 36Kr / IT桔子 | 中国一级市场 |
 
-# 查看抓取日志
-curl http://localhost:8000/api/scrape/logs
+每条动态通过 `tech_mapper` 引擎自动关联到系统内的 4 大技术领域和 6 个产业方向。
 
-# 查看所有数据源状态
-curl http://localhost:8000/api/scrape/sources
-```
+### 技术-产业映射
 
-### API 端点
+150+ 关键词映射引擎，自动将政策文本和融资新闻归类到：
+
+| 技术领域 | 产业方向 |
+|---|---|
+| 具身智能 (embodied-ai) | 人形机器人 |
+| 脑机接口 (bci) | 神经假肢/BCI医疗 |
+| 量子计算 (quantum) | 量子计算产业链 |
+| 核聚变 (fusion) | 聚变能源产业链 |
+| | 算力网 |
+| | 生物医药 |
+
+### 同类政策推荐
+
+多因子加权相似度：技术标签重叠（35%）+ 产业标签重叠（25%）+ 部门匹配（15%）+ 层级匹配（10%）+ 国别匹配（10%）+ 创新阶段邻近（5%）。不依赖向量数据库。
+
+## API 端点
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/policies` | 政策列表（分页、过滤、排序） |
-| GET | `/api/policies/{id}` | 单条政策详情 |
+| GET | `/api/policies` | 政策列表（分页、技术/产业/国家/部门过滤、排序） |
+| GET | `/api/policies/{id}` | 单条政策 |
 | GET | `/api/policies/{id}/similar` | 同类政策推荐（含匹配度） |
-| POST | `/api/scrape/{source}/trigger` | 手动触发抓取 |
-| GET | `/api/scrape/sources` | 数据源列表 |
+| GET | `/api/policies/{id}/trail` | 数据来源追溯链 |
+| GET | `/api/market-events` | 一级市场动态（按技术/产业过滤） |
+| GET | `/api/market-events/stats` | 融资统计（按技术/产业/事件类型） |
+| POST | `/api/market-events/fetch` | 手动触发市场数据采集 |
+| POST | `/api/scrape/{source}/trigger` | 手动触发政策抓取 |
+| GET | `/api/scrape/sources` | 数据源状态 |
 | GET | `/api/scrape/logs` | 抓取日志 |
 | GET | `/api/health` | 健康检查 |
 | GET | `/docs` | Swagger API 文档 |
 
-### 同类政策推荐
+## LLM Agent
 
-基于多因子加权相似度算法：技术标签重叠（35%）+ 产业标签重叠（25%）+ 部门匹配（15%）+ 层级匹配（10%）+ 国别匹配（10%）+ 创新阶段邻近（5%）。不依赖向量数据库或嵌入模型。
+底部输入框支持 LLM 动态生成看板数据。⚙️ 配置支持：
 
-## LLM 代理集成
-
-底部 Agent 输入框支持通过 LLM 动态生成数据来替换看板静态数据。点击 ⚙ 齿轮图标可配置：
-
-- OpenAI / DeepSeek / 智谱 GLM / 通义千问 / Ollama 本地模型
-- API Key + Base URL + 模型名
-- 代理模式切换（通过 FastAPI 后端代理 vs 浏览器直连）
-
-也可一键加载 5 组预制演示数据，无需调用任何 LLM。
+- OpenAI / DeepSeek / 智谱 GLM / 通义千问 / Ollama
+- 通过 FastAPI 代理绕过 CORS
+- 5 组预制演示数据（无需 API Key）
 
 ## 项目结构
 
 ```
-├── frontend/                    # React 前端
+├── frontend/                          # React 前端
 │   └── src/
-│       ├── App.tsx              # 主应用（模块路由 + 状态管理）
-│       ├── constants.ts         # 硬编码数据 + 派生函数
-│       ├── hooks/               # usePolicies / useSimilarPolicies
-│       └── components/          # 四大模块组件 + Agent 组件
-├── backend/                     # FastAPI 后端
-│   ├── main.py                  # 入口（CORS + lifespan + 路由注册）
-│   ├── database.py              # SQLite 连接管理 + CRUD
-│   ├── data.py                  # 数据访问层（SQLite 优先，JSON 降级）
-│   ├── scheduler.py             # APScheduler 定时任务
-│   ├── models.py                # Pydantic 响应模型
-│   ├── similarity.py            # 多因子加权相似度算法
-│   ├── policy_schema.sql        # SQLite schema
-│   ├── seed_policies.py         # JSON → SQLite 数据迁移脚本
-│   ├── routers/                 # 技术/政策/产业/LLM/抓取 路由
-│   ├── scrapers/                # 政策抓取器
-│   │   ├── base.py              # 抽象基类 + 工具函数
-│   │   ├── us_federal_register.py  # US Federal Register
-│   │   ├── us_congress.py       # US Congress.gov
-│   │   └── eu_eurlex.py         # EU EUR-Lex SPARQL
-│   └── data/                    # JSON 数据 + SQLite 数据库
-├── SPEC.md                      # 完整产品规格文档
-└── PLAN.md                      # 实现计划
+│       ├── App.tsx                    # 主应用
+│       ├── constants.ts               # 数据 + 派生函数
+│       ├── types.ts                   # TypeScript 类型
+│       ├── hooks/                     # usePolicies / useMarketEvents / useSimilarPolicies
+│       ├── components/                # 四大模块 + Settings + AgentStatusBar
+│       └── lib/                       # LLM 客户端 / 演示预设
+├── backend/                           # FastAPI 后端
+│   ├── main.py                        # 入口（lifespan + CORS + 路由）
+│   ├── config.py                      # 环境变量配置
+│   ├── database.py                    # SQLite CRUD
+│   ├── data.py                        # 数据访问层（DB 优先，JSON 降级）
+│   ├── scheduler.py                   # APScheduler 定时调度
+│   ├── models.py                      # Pydantic 模型
+│   ├── similarity.py                  # 相似度算法
+│   ├── routers/                       # API 路由（tech/policy/industry/llm/scrape/market）
+│   ├── scrapers/                      # 数据采集
+│   │   ├── base.py                    # 抽象基类
+│   │   ├── us_federal_register.py     # US Federal Register API
+│   │   ├── us_congress.py             # US Congress.gov API
+│   │   ├── eu_eurlex.py               # EU EUR-Lex SPARQL
+│   │   ├── rss_feeds.py               # RSS 多源订阅（13 源）
+│   │   ├── search_discovery.py        # 搜索引擎发现 + 来源核查
+│   │   ├── market_events.py           # 一级市场动态
+│   │   ├── tech_mapper.py             # 技术-产业关键词映射
+│   │   └── cleaner.py                 # 数据清洗去重管道
+│   ├── seed_policies.py               # JSON → SQLite
+│   ├── seed_external.py               # 外部数据集导入
+│   ├── tag_policies.py                # 自动标注政策关联
+│   └── data/                          # JSON 数据文件
+├── SPEC.md                            # 产品规格文档
+└── PLAN.md                            # 实现计划
 ```
