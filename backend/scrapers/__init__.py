@@ -4,7 +4,9 @@ from .us_congress import CongressScraper
 from .eu_eurlex import EurLexScraper
 from .rss_feeds import RSSDiscovery
 from .search_discovery import SearchDiscovery
+from .cn_gov import ChinaGovScraper
 from .cleaner import PolicyCleaner
+from .provenance import SourceTrail, QualityScorer
 
 SCRAPERS: dict[str, BaseScraper] = {
     "us_federal_register": FederalRegisterScraper(),
@@ -12,4 +14,5 @@ SCRAPERS: dict[str, BaseScraper] = {
     "eu_eurlex": EurLexScraper(),
     "rss_discovery": RSSDiscovery(),
     "search_discovery": SearchDiscovery(),
+    "cn_gov": ChinaGovScraper(),
 }

@@ -70,13 +70,18 @@ export default function App() {
   const applyResponse = useCallback((resp: LLMResponse) => {
     setLLMOverride(prev => {
       if (resp.module === 'policy') {
-        return { ...prev, policy: (resp.payload as { policies: Policy[] }).policies };
+        const payload = resp.payload as { policies: Policy[] };
+        return { ...prev, policy: payload.policies ?? [] };
       }
       if (resp.module === 'industry') {
-        return { ...prev, industry: (resp.payload as { regions: Region[] }).regions };
+        const payload = resp.payload as { regions: Region[] };
+        return { ...prev, industry: payload.regions ?? [] };
       }
-      const m = resp.payload as { chain: ChainLayer[]; fundingEvents: FundingEvent[] };
-      return { ...prev, market: { chain: m.chain, fundingEvents: m.fundingEvents } };
+      if (resp.module === 'market') {
+        const payload = resp.payload as { chain: ChainLayer[]; fundingEvents: FundingEvent[] };
+        return { ...prev, market: { chain: payload.chain ?? [], fundingEvents: payload.fundingEvents ?? [] } };
+      }
+      return prev;
     });
     setLastAgentModule(resp.module);
     setActiveModule(resp.module);
@@ -195,7 +200,6 @@ export default function App() {
             )}
             {activeModule === 'policy' && (
               <PolicyTracker
-                currentTech={activeTech}
                 focusPolicyId={focusPolicyId}
                 onNavigateToTech={navigateToTech}
                 onNavigateToIndustry={navigateToIndustry}

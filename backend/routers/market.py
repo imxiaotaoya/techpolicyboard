@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 
 from database import get_market_events, get_market_event
-from scrapers.market_events import MarketEventsScraper
+from scrapers.market_events_v2 import EnhancedMarketScraper
 
 router = APIRouter()
 
@@ -77,7 +77,7 @@ def market_stats() -> dict:
 @router.post("/market-events/fetch")
 async def trigger_market_fetch() -> dict:
     """Manually trigger market events scraping."""
-    scraper = MarketEventsScraper()
+    scraper = EnhancedMarketScraper()
     events = await scraper.fetch_events()
 
     from database import insert_market_event

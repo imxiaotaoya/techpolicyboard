@@ -51,6 +51,10 @@ def _seed_sources(db: sqlite3.Connection) -> None:
          None, "scrapers.search_discovery", 24),
         ("market_events", "Primary Market Events", "GLOBAL",
          None, "scrapers.market_events", 12),
+        ("market_events_v2", "Enhanced Market Events (Provenance-tracked)", "GLOBAL",
+         None, "scrapers.market_events_v2", 12),
+        ("cn_gov", "China Government Policy (国务院/科技部/工信部/发改委)", "CN",
+         None, "scrapers.cn_gov", 24),
     ]
     db.executemany(
         """INSERT OR IGNORE INTO sources (id, name, country, url, scraper_module, scrape_interval_hours)
@@ -109,12 +113,6 @@ def insert_policy(policy: dict) -> bool:
         return True
     except sqlite3.IntegrityError:
         return False
-
-
-def policy_exists(policy_id: str) -> bool:
-    db = get_db()
-    row = db.execute("SELECT 1 FROM policies WHERE id = ?", (policy_id,)).fetchone()
-    return row is not None
 
 
 def log_scrape_start(source_id: str) -> int:

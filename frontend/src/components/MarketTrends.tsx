@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TrendingUp, Activity, Flame, Snowflake, Target, AlertCircle, Search } from 'lucide-react';
 import type { ChainItem, ChainLayer, FundingEvent, TechnologyType } from '../types';
@@ -6,6 +6,7 @@ import { POLICY_DATA, FUNDING_EVENTS, CHAIN_MAP } from '../constants';
 import { cn } from '../lib/utils';
 import { useMarketEvents } from '../hooks/useMarketEvents';
 import { usePolicies } from '../hooks/usePolicies';
+import { useAutoScroll } from '../hooks/useAutoScroll';
 
 interface MarketTrendsProps {
   activeTech?: TechnologyType;
@@ -22,19 +23,20 @@ export default function MarketTrends({
 }: MarketTrendsProps) {
   const [selectedGap, setSelectedGap] = useState<ChainItem | null>(null);
   const [showInsight, setShowInsight] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const chain = chainOverride ?? CHAIN_MAP[activeTech] ?? [];
 
-  const { events: apiEvents } = useMarketEvents(activeTech);
+  const { events: apiEvents, allEvents: apiAllEvents } = useMarketEvents(activeTech);
   const { policies: apiPolicies } = usePolicies({ pageSize: 200 });
 
   const fundingEvents = useMemo(() => {
     if (fundingOverride && fundingOverride.length > 0) return fundingOverride;
-    if (apiEvents.length > 0) return apiEvents;
+    // Show tech-filtered events if available, otherwise all events, else fallback
+    if (apiEvents.length >= 4) return apiEvents;
+    if (apiAllEvents.length > 0) return apiAllEvents;
     const forTech = FUNDING_EVENTS.filter(e => e.techId === activeTech);
     return forTech.length ? forTech : FUNDING_EVENTS;
-  }, [activeTech, fundingOverride, apiEvents]);
+  }, [activeTech, fundingOverride, apiEvents, apiAllEvents]);
 
   const policyTimeline = useMemo(() => {
     const source = apiPolicies.length > 0 ? apiPolicies : POLICY_DATA;
@@ -44,6 +46,7 @@ export default function MarketTrends({
       .slice(-6);
   }, [apiPolicies]);
 
+  const scrollRef = useAutoScroll(0.35);
   const maxFunding = useMemo(() => {
     const vals = fundingEvents.map(e => numericAmount(e.amount));
     return Math.max(1, ...vals);
@@ -53,25 +56,6 @@ export default function MarketTrends({
     // reset gap panel on tech change
     setSelectedGap(null);
   }, [activeTech]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    let raf = 0;
-    let pos = 0;
-    const tick = () => {
-      if (el.matches(':hover')) {
-        raf = requestAnimationFrame(tick);
-        return;
-      }
-      pos += 0.35;
-      if (pos >= el.scrollHeight / 2) pos = 0;
-      el.scrollTop = pos;
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [fundingEvents]);
 
   const displayEvents = [...fundingEvents, ...fundingEvents];
 

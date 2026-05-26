@@ -48,6 +48,8 @@ def get_policies() -> list:
             if rows:
                 return [_db_row_to_policy(dict(r)) for r in rows]
         except Exception:
+            import logging
+            logging.getLogger("techpolicy").warning("DB read failed, falling back to JSON")
             pass
 
     # Fallback to JSON
@@ -55,13 +57,6 @@ def get_policies() -> list:
     if _policies_cache is None:
         _policies_cache = _load_json("policies.json")
     return list(_policies_cache.get("policies", []))
-
-
-def reload() -> None:
-    global _policies_cache, _technologies_cache, _industries_cache
-    _policies_cache = None
-    _technologies_cache = None
-    _industries_cache = None
 
 
 def use_json_mode() -> None:

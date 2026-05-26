@@ -5,7 +5,7 @@ import httpx
 
 from .base import BaseScraper, PolicyDict, _is_tech_relevant, _extract_summary, _extract_date
 
-SPARQL_ENDPOINT = "http://publications.europa.eu/webapi/rdf/sparql"
+SPARQL_ENDPOINT = "https://publications.europa.eu/webapi/rdf/sparql"
 
 
 class EurLexScraper(BaseScraper):
@@ -32,6 +32,10 @@ class EurLexScraper(BaseScraper):
                     if _is_tech_relevant(policy.title, policy.summary, policy.full_text):
                         policies.append(policy)
             except Exception:
+                import logging
+                logging.getLogger("techpolicy.scrapers").warning(
+                    "eur_lex SPARQL query failed for %s", self.source_id
+                )
                 pass
 
         return policies

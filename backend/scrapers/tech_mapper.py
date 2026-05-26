@@ -12,9 +12,12 @@ TECH_MAP: list[tuple[list[str], str, str]] = [
     # (keywords, technology_id, technology_name)
     # --- Embodied AI ---
     (["humanoid robot", "humanoid", "embodied intelligence", "embodied ai",
+      "artificial intelligence", "machine learning", "deep learning",
+      "large language model", "llm", "generative ai", "chatgpt", "gpt",
       "具身智能", "人形机器人", "telerobot", "dexterous manipulation",
       "robot hand", "robot arm", "locomotion", "grasping", "manipulation",
-      "world model", "robot foundation model", "autonomous driving"],
+      "world model", "robot foundation model", "autonomous driving",
+      "ai", "artificial"],
      "embodied-ai", "具身智能"),
     # --- BCI ---
     (["brain-computer", "brain computer", "neural interface", "neuralink",
@@ -23,7 +26,7 @@ TECH_MAP: list[tuple[list[str], str, str]] = [
       "brain-machine", "brain machine", "neurotechnology", "neurotech"],
      "bci", "脑机接口"),
     # --- Quantum Computing ---
-    (["quantum computing", "quantum computer", "qubit", "quantum processor",
+    (["quantum computing", "quantum computer", "quantum", "qubit", "quantum processor",
       "quantum algorithm", "quantum error correction", "superconducting qubit",
       "ion trap", "quantum annealing", "quantum cryptography", "quantum network",
       "量子计算", "量子", "qiskit", "cirq", "quantum advantage",
@@ -51,6 +54,7 @@ INDUSTRY_MAP: list[tuple[list[str], str, str]] = [
     # --- Compute Grid ---
     (["gpu", "h100", "a100", "b100", "b200", "nvidia", "tpu",
       "ai chip", "chipmaker", "brain chip", "大脑芯片",
+      "semiconductor", "chips", "chip", "processors",
       "data center", "datacenter", "server farm",
       "cloud computing", "hpc", "supercomputer", "inference chip",
       "training chip", "npu", "ai accelerator", "scheduler",

@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowUpRight } from 'lucide-react';
-import type { Policy, PolicyDepartment, TechnologyType, TechDomain } from '../types';
+import type { Policy, PolicyDepartment, TechDomain } from '../types';
 import { POLICY_DATA, DEPT_COLORS, INNOVATION_STAGES, INDUSTRY_BY_ID, ALL_SUB_TECHS } from '../constants';
 import { cn } from '../lib/utils';
 import { usePolicies } from '../hooks/usePolicies';
 import { useSimilarPolicies } from '../hooks/useSimilarPolicies';
+import { useAutoScroll } from '../hooks/useAutoScroll';
 
 const DEPT_FALLBACK = { fill: '#888888', label: '其他', twBg: 'bg-gray-600', twText: 'text-gray-700' } as const;
 
@@ -35,7 +36,6 @@ const DOMAIN_LABEL: Record<Exclude<DomainFilter, 'ALL'>, string> = {
 interface PolicyTrackerProps {
   onNavigateToTech?: (techId: string) => void;
   onNavigateToIndustry?: (industryId: string) => void;
-  currentTech?: TechnologyType;
   focusPolicyId?: string | null;
   policies?: Policy[];
 }
@@ -52,7 +52,6 @@ export default function PolicyTracker({
   const [level, setLevel] = useState<LevelFilter>('ALL');
   const [domain, setDomain] = useState<DomainFilter>('ALL');
   const [selected, setSelected] = useState<Policy | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   const { similarPolicies } = useSimilarPolicies(selected?.id ?? null);
 
@@ -75,23 +74,7 @@ export default function PolicyTracker({
     );
   }, [dataset, region, level, domain]);
 
-  useEffect(() => {
-    let raf = 0;
-    let pos = 0;
-    const el = scrollRef.current;
-    const tick = () => {
-      if (!el || el.matches(':hover') || filtered.length < 4 || selected) {
-        raf = requestAnimationFrame(tick);
-        return;
-      }
-      pos += 0.25;
-      if (pos >= el.scrollHeight / 2) pos = 0;
-      el.scrollTop = pos;
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [filtered, selected]);
+  const scrollRef = useAutoScroll(0.25, !selected && filtered.length >= 4);
 
   return (
     <div className="relative w-full h-full text-high-text font-sans overflow-hidden bg-[#efedea]">

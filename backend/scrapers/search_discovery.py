@@ -99,6 +99,10 @@ class SearchDiscovery(BaseScraper):
                         },
                     ))
         except Exception:
+            import logging
+            logging.getLogger("techpolicy.scrapers").warning(
+                "search_discovery failed for query: %s", label
+            )
             pass
 
         return [p for p in policies if PolicyCleaner.verify(p)]
@@ -145,4 +149,8 @@ class SearchDiscovery(BaseScraper):
                 "date": date_match.group(1) if date_match else datetime.utcnow().strftime("%Y-%m-%d"),
             }
         except Exception:
+            import logging
+            logging.getLogger("techpolicy.scrapers").debug(
+                "source verification failed for: %s", url
+            )
             return None

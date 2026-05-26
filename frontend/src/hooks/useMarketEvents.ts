@@ -38,7 +38,9 @@ function parseJsonArray(val: unknown): string[] {
 
 export function useMarketEvents(techId: TechnologyType) {
   const [events, setEvents] = useState<FundingEvent[]>([]);
+  const [allEvents, setAllEvents] = useState<FundingEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -48,22 +50,23 @@ export function useMarketEvents(techId: TechnologyType) {
 
     setLoading(true);
 
-    fetch(`/api/market-events?technology_id=${encodeURIComponent(techId)}&limit=100`, {
-      signal: controller.signal,
-    })
-      .then(res => {
-        if (!res.ok) throw new Error(`API error: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        const mapped = (data.events || []).map((e: Record<string, unknown>, i: number) =>
-          mapEvent(e, i)
-        );
-        setEvents(mapped);
+    // Fetch ALL events (no tech filter) to populate the scroll feed
+    // Also fetch tech-filtered set for the filtered view
+    Promise.all([
+      fetch(`/api/market-events?limit=100`, { signal: controller.signal }),
+      fetch(`/api/market-events?technology_id=${encodeURIComponent(techId)}&limit=100`, { signal: controller.signal }),
+    ])
+      .then(async ([allRes, filteredRes]) => {
+        const allData = allRes.ok ? await allRes.json() : { events: [] };
+        const filteredData = filteredRes.ok ? await filteredRes.json() : { events: [] };
+        setAllEvents((allData.events || []).map((e: Record<string, unknown>, i: number) => mapEvent(e, i)));
+        setEvents((filteredData.events || []).map((e: Record<string, unknown>, i: number) => mapEvent(e, i)));
       })
       .catch(err => {
         if (err instanceof DOMException && err.name === 'AbortError') return;
+        setError(err instanceof Error ? err.message : 'Failed to fetch market events');
         setEvents([]);
+        setAllEvents([]);
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -72,5 +75,5 @@ export function useMarketEvents(techId: TechnologyType) {
     return () => controller.abort();
   }, [techId]);
 
-  return { events, loading };
+  return { events, allEvents, loading, error };
 }

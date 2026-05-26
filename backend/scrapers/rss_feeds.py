@@ -16,8 +16,7 @@ from .cleaner import PolicyCleaner
 FEEDS: list[tuple[str, str, str]] = [
     # (country, source_name, rss_url)
     ("US", "Federal Register", "https://www.federalregister.gov/documents.rss"),
-    ("US", "White House Briefings", "https://www.whitehouse.gov/briefing-room/feed.xml"),
-    ("US", "NSF News", "https://new.nsf.gov/news.xml"),
+    ("US", "NSF News", "https://www.nsf.gov/news/rss.xml"),
     ("EU", "European Parliament News", "https://www.europarl.europa.eu/rss/doc/last-news/en.xml"),
     ("EU", "EU Digital Strategy", "https://digital-strategy.ec.europa.eu/en/rss.xml"),
     ("UK", "UK Parliament Publications", "https://www.parliament.uk/business/publications.rss"),
@@ -25,7 +24,7 @@ FEEDS: list[tuple[str, str, str]] = [
     ("UK", "GOV.UK Policy Papers", "https://www.gov.uk/government/publications.atom?publication_filter_option=policy-papers"),
     ("US", "DOE News", "https://www.energy.gov/rss/news.xml"),
     ("US", "NIST News", "https://www.nist.gov/news-events/news/rss.xml"),
-    ("US", "OSTP News", "https://www.whitehouse.gov/ostp/news-updates/feed.xml"),
+    ("US", "OSTP News", "https://www.whitehouse.gov/ostp/feed.xml"),
     ("EU", "EU Research & Innovation", "https://ec.europa.eu/commission/presscorner/api/rss"),
     ("CN", "科技部", "https://www.most.gov.cn/tpxw/rss/rss.htm"),
 ]
@@ -48,6 +47,8 @@ class RSSDiscovery(BaseScraper):
                         if policy and PolicyCleaner.verify(policy):
                             policies.append(policy)
                 except Exception:
+                    from .crash_handler import log_warn
+                    log_warn("rss_discovery", source_name, f"feed failed: {feed_url}")
                     continue
                 await asyncio.sleep(settings.scraper_delay_seconds)
         return PolicyCleaner.deduplicate(policies)

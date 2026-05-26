@@ -8,10 +8,30 @@ import re
 STAGE_ORDER = ["basic-research", "applied-rd", "pilot", "commercialization"]
 
 RELATED_DEPTS: dict[str, set[str]] = {
-    "MoST": {"MIIT"},
+    # Chinese departments
+    "MoST": {"MIIT", "NDRC"},
     "MIIT": {"MoST", "NDRC"},
-    "NDRC": {"MIIT"},
-    "International": set(),
+    "NDRC": {"MIIT", "MoST"},
+    "StateCouncil": {"NDRC", "MoST", "MIIT"},
+    # US departments
+    "White House": {"OMB", "OSTP", "NIST"},
+    "OMB": {"White House", "OSTP"},
+    "OSTP": {"White House", "OMB", "NSF", "DOE"},
+    "US Congress": {"GAO", "CRS"},
+    "DoD": {"DARPA", "US Congress"},
+    "DOE": {"OSTP", "NSF", "NIST"},
+    "NSF": {"OSTP", "DOE", "NIST"},
+    "NIH": {"NSF", "HHS"},
+    "NIST": {"White House", "OMB"},
+    "SEC": {"FTC", "CFTC"},
+    "FTC": {"SEC", "DOJ"},
+    "FCC": {"FTC", "NTIA"},
+    # EU bodies
+    "European Commission": {"European Parliament", "Council of the EU"},
+    "European Parliament": {"European Commission", "Council of the EU"},
+    "Council of the EU": {"European Commission", "European Parliament"},
+    # All external/international
+    "International": {"European Commission", "US Congress", "StateCouncil"},
 }
 
 WEIGHTS = {

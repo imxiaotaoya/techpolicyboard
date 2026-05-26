@@ -74,8 +74,13 @@ def start_scheduler() -> None:
         "interval", hours=24, id="search_discovery",
         replace_existing=True, misfire_grace_time=3600, max_instances=1,
     )
+    scheduler.add_job(
+        lambda: _sync_wrapper("cn_gov"),
+        "interval", hours=24, id="cn_gov",
+        replace_existing=True, misfire_grace_time=3600, max_instances=1,
+    )
     scheduler.start()
-    logger.info("Scheduler started: rss(12h), search(24h), us_fed_reg(24h), us_congress(24h), eu_eurlex(48h)")
+    logger.info("Scheduler started: rss(12h), cn_gov(24h), search(24h), us_fed_reg(24h), us_congress(24h), eu_eurlex(48h)")
 
 
 def shutdown_scheduler() -> None:
