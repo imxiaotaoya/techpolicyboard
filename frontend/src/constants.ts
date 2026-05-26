@@ -1534,8 +1534,15 @@ export const SUB_TECH_TO_DOMAIN: Record<string, TechnologyType> = {
 };
 
 export function deriveTechDomain(p: { relatedTechnologies: string[] }): TechDomain {
+  const TECH_DOMAIN_IDS = new Set<string>(['embodied-ai', 'bci', 'quantum', 'fusion']);
   const domains = new Set<TechnologyType>();
   for (const t of p.relatedTechnologies) {
+    // Direct tech domain ID (from tagger/mapper)
+    if (TECH_DOMAIN_IDS.has(t)) {
+      domains.add(t as TechnologyType);
+      continue;
+    }
+    // Sub-tech ID → domain lookup
     const d = SUB_TECH_TO_DOMAIN[t];
     if (d) domains.add(d);
   }
